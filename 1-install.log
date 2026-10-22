@@ -1,0 +1,23 @@
+Scope: all 8 workspace projects
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +961
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 961, reused 0, downloaded 144, added 138
+Progress: resolved 961, reused 0, downloaded 426, added 419
+Progress: resolved 961, reused 0, downloaded 612, added 583
+Progress: resolved 961, reused 0, downloaded 617, added 585
+Progress: resolved 961, reused 0, downloaded 642, added 597
+Progress: resolved 961, reused 0, downloaded 750, added 689
+Progress: resolved 961, reused 0, downloaded 927, added 882
+Progress: resolved 961, reused 0, downloaded 961, added 961, done
+.../esbuild@0.27.3/node_modules/esbuild postinstall$ node install.js
+.../esbuild@0.27.3/node_modules/esbuild postinstall: Done
+
+devDependencies:
++ prettier 3.9.6
++ typescript 5.9.3
+
+. preinstall$ sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+. preinstall: Done
+Done in 8.7s using pnpm v10.28.0

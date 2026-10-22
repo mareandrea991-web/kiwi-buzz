@@ -1,0 +1,11 @@
+479:Android Bundling failed 1658ms node_modules/.pnpm/expo-router@6.0.24_@types+react-dom@19.1.11_@types+react@19.1.17__@types+react@19.1.17__fdb348e3fa81840b33cbb7dec3670e5a/node_modules/expo-router/entry.js (1 module)
+480:SyntaxError: ../../node_modules/.pnpm/expo-router@6.0.24_@types+react-dom@19.1.11_@types+react@19.1.17__@types+react@19.1.17__fdb348e3fa81840b33cbb7dec3670e5a/node_modules/expo-router/entry.js: Cannot find module 'babel-preset-expo'
+498:Error: Cannot find module 'babel-preset-expo'
+630:FAILURE: Build failed with an exception.
+632:* What went wrong:
+633:Execution failed for task ':app:createBundleReleaseJsAndAssets'.
+641:* Exception is:
+642:org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:createBundleReleaseJsAndAssets'.
+652:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+704:Caused by: org.gradle.process.internal.ExecException: Process 'command 'node'' finished with non-zero exit value 1
+809:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
