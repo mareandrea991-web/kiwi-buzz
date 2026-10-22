@@ -1,0 +1,73 @@
+diff --git a/android/build.gradle b/android/build.gradle
+index 381c0cf3a10c2a62898732113324bbb804cb22ad..c9af2a94c0a5dd3971c2c6b620dfed0c18ece82f 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -20,7 +20,7 @@ def safeExtGet(prop, fallback) {
+ }
+ 
+ apply plugin: 'com.android.library'
+-apply plugin: 'maven'
++
+ 
+ buildscript {
+     // The Android Gradle plugin is only required when opening the android folder stand-alone.
+@@ -30,7 +30,7 @@ buildscript {
+     if (project == rootProject) {
+         repositories {
+             google()
+-            jcenter()
++            mavenCentral()
+         }
+         dependencies {
+             classpath 'com.android.tools.build:gradle:3.4.1'
+@@ -39,7 +39,7 @@ buildscript {
+ }
+ 
+ apply plugin: 'com.android.library'
+-apply plugin: 'maven'
++
+ 
+ android {
+     compileSdkVersion safeExtGet('compileSdkVersion', DEFAULT_COMPILE_SDK_VERSION)
+@@ -71,7 +71,7 @@ repositories {
+         url "$rootDir/../node_modules/jsc-android/dist"
+     }
+     google()
+-    jcenter()
++    mavenCentral()
+ }
+ 
+ 
+@@ -149,14 +149,6 @@ afterEvaluate { project ->
+         archives androidJavadocJar
+     }
+ 
+-    task installArchives(type: Upload) {
+-        configuration = configurations.archives
+-        repositories.mavenDeployer {
+-            // Deploy to react-native-event-bridge/maven, ready to publish to npm
+-            repository url: "file://${projectDir}/../android/maven"
+-            configureReactNativePom pom
+-        }
+-    }
+ }
+ 
+ 
+@@ -164,7 +156,7 @@ afterEvaluate { project ->
+ //buildscript {
+ //    repositories {
+ //        google()
+-//        jcenter()
++//        mavenCentral()
+ //        mavenCentral()
+ //    }
+ //
+@@ -200,7 +192,7 @@ afterEvaluate { project ->
+ //        // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+ //        url "$rootDir/../node_modules/react-native/android"
+ //    }
+-//    jcenter()
++//    mavenCentral()
+ //}
+ //
+ //dependencies {

@@ -1,0 +1,22 @@
+# Render Blueprint — creates the Kiwi Buzz web service.
+# In Render: New → Blueprint → pick this repo. See README.md for the steps.
+services:
+  - type: web
+    name: kiwi-buzz
+    runtime: node
+    plan: free            # free plan sleeps when idle; "starter" stays awake
+    region: singapore     # closest Render region to New Zealand
+    buildCommand: (corepack enable || npm install -g pnpm@10.28.0) && pnpm install --frozen-lockfile && pnpm run build:deploy
+    startCommand: pnpm start
+    healthCheckPath: /api/healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Optional — only needed for Spotify Host Mode. Leave blank to skip.
+      - key: SPOTIFY_CLIENT_ID
+        sync: false
+      - key: SPOTIFY_CLIENT_SECRET
+        sync: false
+      # Optional — your own domain, e.g. kiwibuzz.nz (comma separated for several)
+      - key: PUBLIC_HOSTNAME
+        sync: false
