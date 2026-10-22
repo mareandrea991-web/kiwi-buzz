@@ -34,21 +34,21 @@ jobs:
       - name: Free up disk space
         run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: pnpm/action-setup@v4 # version comes from package.json "packageManager"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -63,10 +63,33 @@ jobs:
           sed -i "s/versionCode 1$/versionCode ${{ github.run_number }}/" build.gradle
           sed -i "s/versionName \"1.0.0\"/versionName \"1.0.${{ github.run_number }}\"/" build.gradle
           grep -E "versionCode|versionName" build.gradle
+          # More memory for the build (the default 2 GB is tight for React Native)
+          cd .. && sed -i 's/^org.gradle.jvmargs=.*/org.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1g/' gradle.properties
+          grep jvmargs gradle.properties
 
       - name: Build APK
         working-directory: artifacts/music-quiz/android
-        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+        run: |
+          set -o pipefail
+          ./gradlew assembleRelease --no-daemon --stacktrace -PreactNativeArchitectures=arm64-v8a,armeabi-v7a 2>&1 | tee "$RUNNER_TEMP/gradle.log"
+
+      # If the build fails, put the important part of the log on the (public)
+      # run summary page so it can be read without signing in.
+      - name: Show build errors
+        if: failure()
+        run: |
+          LOG="$RUNNER_TEMP/gradle.log"
+          [ -f "$LOG" ] || exit 0
+          {
+            echo "## Build errors"
+            echo '```'
+            grep -nE "What went wrong|FAILURE|error:|Error:|e: |Exception|Could not|not found|failed" "$LOG" | grep -v "^.*warning" | head -60
+            echo '```'
+            echo "## Last 80 lines"
+            echo '```'
+            tail -80 "$LOG"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Collect APK
         run: cp artifacts/music-quiz/android/app/build/outputs/apk/release/app-release.apk kiwi-buzz.apk && ls -lh kiwi-buzz.apk
