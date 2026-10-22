@@ -56,6 +56,7 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "description": "Kiwi Buzz \u2014 a live music quiz for a room full of phones."
   }
 }
