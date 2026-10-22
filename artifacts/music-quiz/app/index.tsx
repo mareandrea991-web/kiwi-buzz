@@ -1083,7 +1083,7 @@ export default function App() {
                         ? 'Full tracks play on YOUR device from your Spotify Premium account. Players just buzz.'
                         : nativeSpotify
                           ? 'Full tracks play through the Spotify app on THIS phone. Players just buzz.'
-                          : 'Available when hosting from a web browser or the Kiwi Buzz Android app.'}
+                          : 'Available when hosting from a web browser.'}
                     </Text>
                   </View>
                   {musicSource === 'spotify' && <Icon name="check-circle" color={C.accent} size={18} />}

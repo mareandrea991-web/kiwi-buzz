@@ -38,7 +38,16 @@ Add the domain in Render (**Settings → Custom Domains**), then set `PUBLIC_HOS
 
 ---
 
-## How a game works
+## Android app (APK)
+
+GitHub builds an installable Android app automatically whenever the app code changes (recipe: `.github/workflows/android-apk.yml`). Each build appears under **Releases** on the repository page as **kiwi-buzz.apk** — open that page on an Android phone, download it, and install (allow "Install unknown apps" for your browser if asked). New builds install over the old one.
+
+- The app connects to `kiwi-buzz.onrender.com` — if your Render address changes, update `EXPO_PUBLIC_DOMAIN` in the workflow file.
+- To build by hand: repository → **Actions** → **Build Android APK** → **Run workflow**. A build takes about 15–25 minutes.
+- Android and web players can be in the same game. iPhones use the web link.
+- Spotify Host Mode isn't in the Android app yet: its add-on (`react-native-spotify-remote`) is too old for current Android tools, so it's left out via `expo.autolinking.exclude` in `artifacts/music-quiz/package.json`. Hosting from a web browser still supports Spotify.
+
+
 
 | Step | What happens |
 |---|---|

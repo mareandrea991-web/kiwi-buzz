@@ -63,5 +63,13 @@
     "expo-dev-client": "~6.0.21",
     "react-native-spotify-remote": "^0.3.10",
     "socket.io-client": "^4.8.3"
+  },
+  "expo": {
+    "autolinking": {
+      "exclude": [
+        "react-native-spotify-remote",
+        "react-native-events"
+      ]
+    }
   }
 }

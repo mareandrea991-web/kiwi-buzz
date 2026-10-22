@@ -10,7 +10,7 @@
  * secret never ships in the APK (tokenSwapURL / tokenRefreshURL point at our
  * API server).
  */
-import { Platform } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 
 import { API_BASE } from '@/lib/apiBase';
 
@@ -38,6 +38,9 @@ function load(): RemoteApi | null {
   if (loadAttempted) return api;
   loadAttempted = true;
   if (Platform.OS !== 'android') return null;
+  // The JS package can be bundled even when its Android half isn't linked
+  // (it's excluded in react-native.config.js) — only enable when it really is.
+  if (!NativeModules.RNSpotifyRemoteAuth || !NativeModules.RNSpotifyRemoteAppRemote) return null;
   try {
     // Dynamic require — module only present in native dev/production builds.
     // eslint-disable-next-line @typescript-eslint/no-var-requires

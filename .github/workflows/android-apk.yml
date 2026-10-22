@@ -1,0 +1,93 @@
+# Builds the Kiwi Buzz Android app (APK) on GitHub's computers and publishes it
+# under "Releases" on the repository page, ready to download and install.
+#
+# Runs automatically when the app changes, or by hand:
+#   Actions tab → "Build Android APK" → Run workflow
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "artifacts/music-quiz/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/android-apk.yml"
+
+permissions:
+  contents: write # to publish the release
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+
+env:
+  # The game server the app talks to
+  EXPO_PUBLIC_DOMAIN: kiwi-buzz.onrender.com
+  CI: "1"
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Free up disk space
+        run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4 # version comes from package.json "packageManager"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate the Android project
+        working-directory: artifacts/music-quiz
+        run: npx expo prebuild --platform android --no-install --clean
+
+      - name: Set version
+        working-directory: artifacts/music-quiz/android/app
+        run: |
+          sed -i "s/versionCode 1$/versionCode ${{ github.run_number }}/" build.gradle
+          sed -i "s/versionName \"1.0.0\"/versionName \"1.0.${{ github.run_number }}\"/" build.gradle
+          grep -E "versionCode|versionName" build.gradle
+
+      - name: Build APK
+        working-directory: artifacts/music-quiz/android
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+
+      - name: Collect APK
+        run: cp artifacts/music-quiz/android/app/build/outputs/apk/release/app-release.apk kiwi-buzz.apk && ls -lh kiwi-buzz.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kiwi-buzz-apk
+          path: kiwi-buzz.apk
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-v1.0.${{ github.run_number }}
+          name: Kiwi Buzz for Android 1.0.${{ github.run_number }}
+          make_latest: true
+          files: kiwi-buzz.apk
+          body: |
+            **Install on an Android phone**
+            1. Open this page on the phone and tap **kiwi-buzz.apk** below to download it.
+            2. Open the downloaded file. If Android asks, allow installing apps from your browser ("Install unknown apps").
+            3. Tap **Install**, then open **Kiwi Buzz**.
+
+            New versions install over the old one — your phone keeps the app, just updated.
+            iPhone players use the web link: https://kiwi-buzz.onrender.com
