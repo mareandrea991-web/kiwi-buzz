@@ -33,7 +33,8 @@ const PLAYER_COLORS: Record<PlayerColor, string> = {
   orange: '#FF9F45',
 };
 
-import { API_BASE } from '@/lib/apiBase';
+import { API_BASE, SERVER_ORIGIN } from '@/lib/apiBase';
+import { JoinQR } from '@/components/JoinQR';
 import { onWebAudioBlocked, pauseWebAudio, playWebAudio, stopWebAudio, unlockWebAudio } from '@/lib/webAudio';
 const COLOR_OPTIONS: PlayerColor[] = ['coral', 'blue', 'yellow', 'mint', 'purple', 'orange'];
 const CATEGORIES = ['Pop', 'Rock', 'Rap / Hip-Hop', 'R&B', 'Dance', '70s', '80s', '90s', '2000s', '2010s'];
@@ -42,6 +43,12 @@ const FALLBACK_AUDIO = require('@/assets/audio/neon-replay-demo.mp3');
 // Web build: the demo track is served as a plain file from public/
 const FALLBACK_AUDIO_WEB = '/audio/neon-replay-demo.mp3';
 const IS_WEB = Platform.OS === 'web';
+
+/** Link that opens the join screen with the room code filled in. */
+function joinLink(code: string): string | null {
+  const origin = IS_WEB && typeof window !== 'undefined' ? window.location.origin : SERVER_ORIGIN;
+  return origin ? `${origin}/?join=${encodeURIComponent(code)}` : null;
+}
 
 // ── tiny components ───────────────────────────────────────────────────────────
 function haptic() {
@@ -216,6 +223,22 @@ export default function App() {
       setMusicSource('spotify');
     }
     void verify();
+  }, []);
+
+  // Opened from a QR code / shared link (…/?join=ABC123): go straight to Join with the code filled in
+  useEffect(() => {
+    if (!IS_WEB || typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('join');
+    if (!code) return;
+    params.delete('join');
+    const qs = params.toString();
+    window.history.replaceState({}, '', window.location.pathname + (qs ? `?${qs}` : ''));
+    const clean = code.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    if (clean.length === 6 && !game.restoring) {
+      setJoinCode(clean);
+      setPre('join');
+    }
   }, []);
 
   const connectSpotify = () => {
@@ -418,6 +441,8 @@ export default function App() {
 
     // ── Lobby ────────────────────────────────────────────────────────────────
     if (phase === 'lobby') {
+      const joinUrl = joinLink(room.code);
+      const playerCount = room.players.filter(p => !p.isHost && !p.left).length;
       return (
         <LinearGradient colors={[C.background, '#111937']} style={s.screen}>
           <ScrollView contentContainerStyle={[s.page, pageStyle]}>
@@ -428,7 +453,15 @@ export default function App() {
             <View style={s.roomCodeCard}>
               <Text style={s.roomLabel}>ROOM CODE</Text>
               <Text style={s.roomCode}>{room.code}</Text>
-              <Text style={[s.mutedText, { marginTop: 6 }]}>Share this with your crew</Text>
+              {isHost && joinUrl ? (
+                <>
+                  <View style={{ marginTop: 16 }}><JoinQR value={joinUrl} size={200} /></View>
+                  <Text style={[s.qrCaption, { marginTop: 12 }]}>Scan to join</Text>
+                  <Text style={[s.mutedText, { marginTop: 2, textAlign: 'center' }]}>Or open the game and enter the code</Text>
+                </>
+              ) : (
+                <Text style={[s.mutedText, { marginTop: 6 }]}>Share this with your crew</Text>
+              )}
             </View>
 
             {startError && <ErrorBanner message={startError} onDismiss={game.clearError} />}
@@ -479,11 +512,13 @@ export default function App() {
                 ? <>
                     <Btn
                       icon="play"
-                      disabled={!room.songsReady || room.players.length < 1 || (room.musicSource === 'spotify' && (!spotifyReady || !!spotifyPlaybackError))}
+                      disabled={!room.songsReady || playerCount < 1 || (room.musicSource === 'spotify' && (!spotifyReady || !!spotifyPlaybackError))}
                       onPress={() => { haptic(); game.startGame(); }}
                     >
                       {!room.songsReady
                         ? 'Fetching tracks…'
+                        : playerCount < 1
+                          ? 'Waiting for players to join…'
                         : room.musicSource === 'spotify' && spotifyPlaybackError
                           ? 'Spotify problem — see above'
                           : room.musicSource === 'spotify' && !spotifyReady
@@ -1269,6 +1304,7 @@ const s = StyleSheet.create({
 
   // connection status strip
   connBanner: { position: 'absolute', left: 16, right: 16, zIndex: 80, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.accent, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 9 },
+  qrCaption: { color: C.text, fontSize: 15, fontWeight: '800' },
   connBannerText: { color: C.deep, fontSize: 12, fontWeight: '800', flex: 1 },
   soundBtn: { position: 'absolute', alignSelf: 'center', zIndex: 81, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.accent, borderRadius: 22, paddingHorizontal: 18, paddingVertical: 12 },
   soundBtnText: { color: C.deep, fontSize: 14, fontWeight: '800' },

@@ -42,7 +42,7 @@ Add the domain in Render (**Settings → Custom Domains**), then set `PUBLIC_HOS
 
 | Step | What happens |
 |---|---|
-| Lobby | Host creates a room, players join with the code (up to 12) |
+| Lobby | Host creates a room. Players scan the QR code on the host's screen (or enter the 6-letter code) — up to 12. Start unlocks once someone has joined |
 | 3-2-1 | Countdown before each song; buzzers are locked |
 | Listening | Song plays; first buzz wins. Nobody in **30 s** → answer shown, no points |
 | Answering | Buzzer has **10 s** to type. Blank = wrong (−1). Typed = locked in for the host to judge |

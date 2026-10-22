@@ -261,6 +261,9 @@ export function startRound(
   // A new round may only start from the lobby or after a reveal
   if (room.phase !== "lobby" && room.phase !== "revealing") return { error: "Round already in progress" };
   if (!room.songsReady || !room.songQueue.length) return { error: "Songs not ready yet — wait a moment" };
+  if (room.phase === "lobby" && !getPlayersArray(room).some((p) => !p.isHost && !p.left)) {
+    return { error: "Wait for at least one player to join first." };
+  }
 
   const song = consumeSong(room);
   if (!song) return { error: "No songs available" };
