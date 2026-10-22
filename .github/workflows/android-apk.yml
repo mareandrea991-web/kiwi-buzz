@@ -51,11 +51,16 @@ jobs:
       - uses: gradle/actions/setup-gradle@v5
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          mkdir -p "$RUNNER_TEMP/logs"
+          set -o pipefail
+          pnpm install --frozen-lockfile 2>&1 | tee "$RUNNER_TEMP/logs/1-install.log"
 
       - name: Generate the Android project
         working-directory: artifacts/music-quiz
-        run: npx expo prebuild --platform android --no-install --clean
+        run: |
+          set -o pipefail
+          npx expo prebuild --platform android --no-install --clean 2>&1 | tee "$RUNNER_TEMP/logs/2-prebuild.log"
 
       - name: Set version
         working-directory: artifacts/music-quiz/android/app
@@ -71,25 +76,24 @@ jobs:
         working-directory: artifacts/music-quiz/android
         run: |
           set -o pipefail
-          ./gradlew assembleRelease --no-daemon --stacktrace -PreactNativeArchitectures=arm64-v8a,armeabi-v7a 2>&1 | tee "$RUNNER_TEMP/gradle.log"
+          ./gradlew assembleRelease --no-daemon --stacktrace -PreactNativeArchitectures=arm64-v8a,armeabi-v7a 2>&1 | tee "$RUNNER_TEMP/logs/3-gradle.log"
 
-      # If the build fails, put the important part of the log on the (public)
-      # run summary page so it can be read without signing in.
-      - name: Show build errors
+      # If the build fails, save the logs to a "build-logs" branch so they can be
+      # read without signing in to GitHub.
+      - name: Save build logs
         if: failure()
         run: |
-          LOG="$RUNNER_TEMP/gradle.log"
-          [ -f "$LOG" ] || exit 0
-          {
-            echo "## Build errors"
-            echo '```'
-            grep -nE "What went wrong|FAILURE|error:|Error:|e: |Exception|Could not|not found|failed" "$LOG" | grep -v "^.*warning" | head -60
-            echo '```'
-            echo "## Last 80 lines"
-            echo '```'
-            tail -80 "$LOG"
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+          cd "$RUNNER_TEMP/logs" 2>/dev/null || exit 0
+          G=3-gradle.log
+          if [ -f "$G" ]; then
+            grep -nE "What went wrong|FAILURE|error:|Error:|^e: |Exception|Could not|not found|failed" "$G" | head -150 > errors.txt || true
+            tail -300 "$G" > gradle-tail.txt
+          fi
+          git init -q -b build-logs .
+          git add -A
+          git -c user.name=ci -c user.email=ci@localhost commit -qm "Build logs for run ${{ github.run_number }}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" build-logs
+          { echo "## Build failed"; echo "Logs saved to the build-logs branch."; echo '```'; cat errors.txt 2>/dev/null | head -60; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Collect APK
         run: cp artifacts/music-quiz/android/app/build/outputs/apk/release/app-release.apk kiwi-buzz.apk && ls -lh kiwi-buzz.apk
